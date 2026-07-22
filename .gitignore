@@ -1,0 +1,53 @@
+HELP.md
+# ── Maven build output ──────────────────────────────────────────
+target/
+*.jar
+*.war
+*.class
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ── Spring Boot & Config ────────────────────────────────────────
+application-local.properties
+*.env
+.env
+
+# ── Eclipse / STS ───────────────────────────────────────────────
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+.eclipse/
+*.launch
+
+# ── IntelliJ IDEA ───────────────────────────────────────────────
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ── VS Code ─────────────────────────────────────────────────────
+.vscode/
+
+# ── NetBeans ────────────────────────────────────────────────────
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ── OS generated files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ────────────────────────────────────────────────────────
+*.log
+logs/
