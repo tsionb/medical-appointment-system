@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.medical.department.entity.Department;
 import com.medical.department.repository.DepartmentRepository;
+import com.medical.department.dto.*;
 
 @Service
 public class DepartmentServiceImpl implements DepartmentService {
@@ -16,31 +17,47 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 	
 	@Override
-	public Department saveDepartment(Department department) {
-		return departmentRepository.save(department);
+	public DepartmentResponse saveDepartment(DepartmentRequest request) {
+
+	    Department department = toEntity(request);
+
+	    Department savedDepartment = departmentRepository.save(department);
+
+	    return toResponse(savedDepartment);
 	}
 
 	@Override
-	public List<Department> getAllDepartments() {
-		return departmentRepository.findAll();
+	public List<DepartmentResponse> getAllDepartments() {
+
+	    return departmentRepository.findAll()
+	            .stream()
+	            .map(this::toResponse)
+	            .toList();
 	}
 
 	@Override
-	public Department getDepartmentById(Long id) {
-		return departmentRepository.findById(id).orElseThrow(() ->
-        new RuntimeException("Department not found with id " + id));
+	public DepartmentResponse getDepartmentById(Long id) {
+
+	    Department department = departmentRepository.findById(id)
+	            .orElseThrow(() ->
+	                    new RuntimeException("Department not found with id " + id));
+
+	    return toResponse(department);
 	}
 
 	@Override
-	public Department updateDepartment(Long id, Department department) {
+	public DepartmentResponse updateDepartment(Long id, DepartmentRequest request) {
 		Department existingDepartment = departmentRepository.findById(id)
 	            .orElseThrow(() ->
 	                    new RuntimeException("Department not found with id " + id));
 
-	    existingDepartment.setName(department.getName());
-	    existingDepartment.setDescription(department.getDescription());
+		existingDepartment.setName(request.getName());
+		existingDepartment.setDescription(request.getDescription());
 
-	    return departmentRepository.save(existingDepartment);
+		Department updatedDepartment =
+		        departmentRepository.save(existingDepartment);
+
+		return toResponse(updatedDepartment);
 	}
 
 	@Override
@@ -51,5 +68,23 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 	    departmentRepository.delete(existingDepartment);
 	}
+	private Department toEntity(DepartmentRequest request) {
 
+	    Department department = new Department();
+
+	    department.setName(request.getName());
+	    department.setDescription(request.getDescription());
+
+	    return department;
+	}
+	private DepartmentResponse toResponse(Department department) {
+
+	    DepartmentResponse response = new DepartmentResponse();
+
+	    response.setId(department.getId());
+	    response.setName(department.getName());
+	    response.setDescription(department.getDescription());
+
+	    return response;
+	}
 }

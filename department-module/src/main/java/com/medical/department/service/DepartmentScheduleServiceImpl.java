@@ -1,9 +1,11 @@
 package com.medical.department.service;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 import com.medical.department.repository.*;
 import com.medical.department.entity.*;
+import com.medical.department.dto.*;
 
 @Service
 public class DepartmentScheduleServiceImpl implements DepartmentScheduleService{
@@ -18,45 +20,61 @@ public class DepartmentScheduleServiceImpl implements DepartmentScheduleService{
 	}
 	
 	@Override
-	public DepartmentSchedule saveSchedule(DepartmentSchedule schedule) {
-		Long departmentId = schedule.getDepartment().getId();
-		
-		Department department = departmentRepository.findById(
-		        departmentId)
-		    .orElseThrow(() ->
-		        new RuntimeException("Department not found"));
-		schedule.setDepartment(department);
-		return departmentScheduleRepository.save(schedule);
+	public DepartmentScheduleResponse saveSchedule(DepartmentScheduleRequest request) {
+
+	    Department department = departmentRepository.findById(request.getDepartmentId())
+	            .orElseThrow(() ->
+	                    new RuntimeException("Department not found"));
+
+	    DepartmentSchedule schedule = toEntity(request, department);
+
+	    DepartmentSchedule savedSchedule = departmentScheduleRepository.save(schedule);
+
+	    return toResponse(savedSchedule);
 	}
 
 	@Override
-	public List<DepartmentSchedule> getAllSchedules() {
-		return departmentScheduleRepository.findAll();
+	public List<DepartmentScheduleResponse> getAllSchedules() {
+
+	    return departmentScheduleRepository.findAll()
+	            .stream()
+	            .map(this::toResponse)
+	            .toList();
 	}
 
 	@Override
-	public DepartmentSchedule getScheduleById(Long id) {
-		DepartmentSchedule schedule = departmentScheduleRepository.findById(id).orElseThrow(() ->
-        new RuntimeException("Schedule not found with id " + id));
-				
-		return schedule;
+	public DepartmentScheduleResponse getScheduleById(Long id) {
+
+	    DepartmentSchedule schedule = departmentScheduleRepository.findById(id)
+	            .orElseThrow(() ->
+	                    new RuntimeException("Schedule not found"));
+
+	    return toResponse(schedule);
 	}
 
 	@Override
-	public DepartmentSchedule updateSchedule(Long id, DepartmentSchedule schedule) {
-		
-		DepartmentSchedule existingSchedule = departmentScheduleRepository.findById(id).orElseThrow(()->
-        new RuntimeException("Schedule not found with id " + id));
-		
-		Department existingDepartment = departmentRepository.findById(schedule.getDepartment().getId()).orElseThrow(()->
-        new RuntimeException("Department not found with id " + id));
-		
-		existingSchedule.setDayOfWeek(schedule.getDayOfWeek());
-		existingSchedule.setOpenTime(schedule.getOpenTime());
-		existingSchedule.setCloseTime(schedule.getCloseTime());
-		existingSchedule.setDepartment(existingDepartment);
-		
-		return departmentScheduleRepository.save(existingSchedule);
+	public DepartmentScheduleResponse updateSchedule(Long id,
+	                                                 DepartmentScheduleRequest request) {
+
+	    DepartmentSchedule existingSchedule =
+	            departmentScheduleRepository.findById(id)
+	            .orElseThrow(() ->
+	                    new RuntimeException("Schedule not found with id " + id));
+
+	    Department department =
+	            departmentRepository.findById(request.getDepartmentId())
+	            .orElseThrow(() ->
+	                    new RuntimeException("Department not found with id " + request.getDepartmentId()));
+
+	    existingSchedule.setDepartment(department);
+	    existingSchedule.setDayOfWeek(request.getDayOfWeek());
+	    existingSchedule.setOpenTime(request.getOpenTime());
+	    existingSchedule.setCloseTime(request.getCloseTime());
+
+	    DepartmentSchedule updatedSchedule =
+	            departmentScheduleRepository.save(existingSchedule);
+
+	    return toResponse(updatedSchedule);
 	}
 
 	@Override
@@ -67,6 +85,30 @@ public class DepartmentScheduleServiceImpl implements DepartmentScheduleService{
 		departmentScheduleRepository.delete(schedule);
 		
 	}
-	
+	private DepartmentSchedule toEntity(
+	        DepartmentScheduleRequest request,
+	        Department department) {
+		DepartmentSchedule schedule = new DepartmentSchedule();
+
+		schedule.setDepartment(department);
+		schedule.setDayOfWeek(request.getDayOfWeek());
+		schedule.setOpenTime(request.getOpenTime());
+		schedule.setCloseTime(request.getCloseTime());
+
+		return schedule;
+	}
+	private DepartmentScheduleResponse toResponse(DepartmentSchedule schedule) {
+
+	    DepartmentScheduleResponse response =
+	            new DepartmentScheduleResponse();
+
+	    response.setId(schedule.getId());
+	    response.setDepartmentId(schedule.getDepartment().getId());
+	    response.setDayOfWeek(schedule.getDayOfWeek());
+	    response.setOpenTime(schedule.getOpenTime());
+	    response.setCloseTime(schedule.getCloseTime());
+
+	    return response;
+	}
 	
 }

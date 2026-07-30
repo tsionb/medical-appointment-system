@@ -1,17 +1,17 @@
 package com.medical.department.service;
 import java.util.List;
 
-import com.medical.department.entity.Department;
-import com.medical.department.entity.DepartmentSchedule;
+import com.medical.department.dto.*;
 
 public interface DepartmentScheduleService {
-	DepartmentSchedule saveSchedule(DepartmentSchedule schedule);
+	DepartmentScheduleResponse saveSchedule(DepartmentScheduleRequest request);
 
-    List<DepartmentSchedule> getAllSchedules();
+	List<DepartmentScheduleResponse> getAllSchedules();
 
-    DepartmentSchedule getScheduleById(Long id);
+	DepartmentScheduleResponse getScheduleById(Long id);
 
-    DepartmentSchedule updateSchedule(Long id, DepartmentSchedule schedule);
+	DepartmentScheduleResponse updateSchedule(Long id,
+	                                          DepartmentScheduleRequest request);
 
-    void deleteSchedule(Long id);
+	void deleteSchedule(Long id);
 }

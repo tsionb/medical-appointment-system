@@ -2,7 +2,7 @@ package com.medical.department.controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import com.medical.department.service.DepartmentService;
-import com.medical.department.entity.Department;
+import com.medical.department.dto.*;
 
 
 @RestController
@@ -16,22 +16,28 @@ public class DepartmentController {
 	}
 	
 	@GetMapping
-	public List<Department> getAllDepartments() {
+	public List<DepartmentResponse> getAllDepartments() {
 	    return departmentService.getAllDepartments();
 	}
 	
+	@GetMapping("/{id}")
+	public DepartmentResponse getDepartment(@PathVariable Long id) {
+	    return departmentService.getDepartmentById(id);
+	}
+	
 	@PostMapping
-	public Department saveDepartment(@RequestBody Department department) {
+	public DepartmentResponse saveDepartment(
+	        @RequestBody DepartmentRequest request) {
 
-	    return departmentService.saveDepartment(department);
-
+	    return departmentService.saveDepartment(request);
 	}
 	
 	@PutMapping("/{id}")
-	public Department updateDepartment(@PathVariable Long id,
-	                                   @RequestBody Department department) {
+	public DepartmentResponse updateDepartment(
+	        @PathVariable Long id,
+	        @RequestBody DepartmentRequest request) {
 
-	    return departmentService.updateDepartment(id, department);
+	    return departmentService.updateDepartment(id, request);
 	}
 	
 	@DeleteMapping("/{id}")

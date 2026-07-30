@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.medical.department.entity.DepartmentSchedule;
+import com.medical.department.dto.*;
 import com.medical.department.service.DepartmentScheduleService;
 
 @RestController
@@ -18,26 +18,30 @@ public class DepartmentScheduleController {
 	}
 	
 	@GetMapping
-	public List<DepartmentSchedule> getAllSchedules() {
+	public List<DepartmentScheduleResponse> getAllDepartmentSchedules() {
 	    return scheduleService.getAllSchedules();
 	}
 	
 	@GetMapping("/{id}")
-	public DepartmentSchedule getSchedule(@PathVariable Long id) {
-		return scheduleService.getScheduleById(id);
+	public DepartmentScheduleResponse getDepartmentSchedule(
+	        @PathVariable Long id) {
+
+	    return scheduleService.getScheduleById(id);
 	}
+	
 	@PostMapping
-	public DepartmentSchedule saveSchedule(@RequestBody DepartmentSchedule schedule) {
+	public DepartmentScheduleResponse saveDepartmentSchedule(
+	        @RequestBody DepartmentScheduleRequest request) {
 
-	    return scheduleService.saveSchedule(schedule);
-
+	    return scheduleService.saveSchedule(request);
 	}
 	
 	@PutMapping("/{id}")
-	public DepartmentSchedule updateSchedule(@PathVariable Long id,
-	                                   @RequestBody DepartmentSchedule schedule) {
+	public DepartmentScheduleResponse updateDepartmentSchedule(
+	        @PathVariable Long id,
+	        @RequestBody DepartmentScheduleRequest request) {
 
-	    return scheduleService.updateSchedule(id, schedule);
+	    return scheduleService.updateSchedule(id, request);
 	}
 	
 	@DeleteMapping("/{id}")
