@@ -9,6 +9,7 @@ public class PatientRequest {
     private String email;
     private String phone;
     private LocalDate dateOfBirth;
+    private String gender;
     private String address;
 
     public String getFirstName() { return firstName; }
@@ -25,6 +26,9 @@ public class PatientRequest {
 
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }

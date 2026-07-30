@@ -2,17 +2,19 @@ package com.medical.patient.service;
 
 import java.util.List;
 
-import com.medical.patient.entity.Patient;
+import com.medical.patient.dto.PatientRequest;
+import com.medical.patient.dto.PatientResponse;
+ 
 
 public interface PatientService {
 
-    Patient createPatient(Patient patient);
+    PatientResponse createPatient(PatientRequest request);
 
-    Patient updatePatient(Long id, Patient patient);
+    PatientResponse updatePatient(Long id, PatientRequest request);
 
-    Patient getPatientById(Long id);
+    PatientResponse getPatientById(Long id);
 
-    List<Patient> getAllPatients();
+    List<PatientResponse> getAllPatients();
 
     void deletePatient(Long id);
 }

@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.medical.patient.entity.Patient;
+import com.medical.patient.dto.PatientRequest;
+import com.medical.patient.dto.PatientResponse;
 import com.medical.patient.service.PatientService;
+
 
 @RestController
 @RequestMapping("/api/patients")
@@ -19,24 +21,24 @@ public class PatientController {
     }
 
     @PostMapping
-    public Patient createPatient(@RequestBody Patient patient) {
-        return patientService.createPatient(patient);
+    public PatientResponse createPatient(@RequestBody PatientRequest request) {
+        return patientService.createPatient(request);
     }
 
     @GetMapping
-    public List<Patient> getAllPatients() {
+    public List<PatientResponse> getAllPatients() {
         return patientService.getAllPatients();
     }
 
     @GetMapping("/{id}")
-    public Patient getPatient(@PathVariable Long id) {
+    public PatientResponse getPatient(@PathVariable Long id) {
         return patientService.getPatientById(id);
     }
 
     @PutMapping("/{id}")
-    public Patient updatePatient(@PathVariable Long id,
-                                 @RequestBody Patient patient) {
-        return patientService.updatePatient(id, patient);
+    public PatientResponse updatePatient(@PathVariable Long id,
+                                 @RequestBody PatientRequest request) {
+        return patientService.updatePatient(id, request);
     }
 
     @DeleteMapping("/{id}")
