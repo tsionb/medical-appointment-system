@@ -1,17 +1,15 @@
 package com.medical.department.service;
+import com.medical.department.dto.request.CreateDepartmentScheduleRequest;
+import com.medical.department.dto.response.DepartmentScheduleResponse;
+
 import java.util.List;
 
-import com.medical.department.dto.*;
-
 public interface DepartmentScheduleService {
-	DepartmentScheduleResponse saveSchedule(DepartmentScheduleRequest request);
+	DepartmentScheduleResponse addOperatingHours(Long departmentId, CreateDepartmentScheduleRequest request);
 
-	List<DepartmentScheduleResponse> getAllSchedules();
+	List<DepartmentScheduleResponse> getOperatingHours(Long departmentId);
 
-	DepartmentScheduleResponse getScheduleById(Long id);
+	DepartmentScheduleResponse getOperatingHoursById(Long scheduleId);
 
-	DepartmentScheduleResponse updateSchedule(Long id,
-	                                          DepartmentScheduleRequest request);
-
-	void deleteSchedule(Long id);
+	void deleteOperatingHours(Long departmentId, Long scheduleId);
 }

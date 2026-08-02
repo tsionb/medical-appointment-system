@@ -1,90 +1,123 @@
 package com.medical.department.service;
-import java.util.List;
 
-import org.springframework.stereotype.Service;
-
+import com.medical.common.exception.custom.DuplicateResourceException;
+import com.medical.common.exception.custom.ResourceNotFoundException;
+import com.medical.department.dto.request.CreateDepartmentRequest;
+import com.medical.department.dto.request.UpdateDepartmentRequest;
+import com.medical.department.dto.response.DepartmentResponse;
 import com.medical.department.entity.Department;
 import com.medical.department.repository.DepartmentRepository;
-import com.medical.department.dto.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
 public class DepartmentServiceImpl implements DepartmentService {
 
-	private final DepartmentRepository departmentRepository;
-	
-	public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
+    private final DepartmentRepository departmentRepository;
+
+    public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
         this.departmentRepository = departmentRepository;
     }
-	
-	@Override
-	public DepartmentResponse saveDepartment(DepartmentRequest request) {
 
-	    Department department = toEntity(request);
+    
+    @Override
+    @Transactional
+    public DepartmentResponse createDepartment(CreateDepartmentRequest request) {
 
-	    Department savedDepartment = departmentRepository.save(department);
+        
+        if (departmentRepository.existsByName(request.getName())) {
+            throw new DuplicateResourceException(
+                "Department with name '" + request.getName() + "' already exists"
+            );
+        }
 
-	    return toResponse(savedDepartment);
-	}
+       
+        Department department = new Department();
+        department.setName(request.getName());
+        department.setDescription(request.getDescription());
 
-	@Override
-	public List<DepartmentResponse> getAllDepartments() {
+       
+        Department saved = departmentRepository.save(department);
 
-	    return departmentRepository.findAll()
-	            .stream()
-	            .map(this::toResponse)
-	            .toList();
-	}
+       
+        return DepartmentResponse.fromEntity(saved);
+    }
 
-	@Override
-	public DepartmentResponse getDepartmentById(Long id) {
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<DepartmentResponse> getAllDepartments() {
+        
+        return departmentRepository.findAll()
+                .stream()
+                .map(DepartmentResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
 
-	    Department department = departmentRepository.findById(id)
-	            .orElseThrow(() ->
-	                    new RuntimeException("Department not found with id " + id));
+  
+    @Override
+    @Transactional(readOnly = true)
+    public DepartmentResponse getDepartmentById(Long id) {
+       
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-	    return toResponse(department);
-	}
+        return DepartmentResponse.fromEntity(department);
+    }
 
-	@Override
-	public DepartmentResponse updateDepartment(Long id, DepartmentRequest request) {
-		Department existingDepartment = departmentRepository.findById(id)
-	            .orElseThrow(() ->
-	                    new RuntimeException("Department not found with id " + id));
+    
+    @Override
+    @Transactional
+    public DepartmentResponse updateDepartment(Long id, UpdateDepartmentRequest request) {
 
-		existingDepartment.setName(request.getName());
-		existingDepartment.setDescription(request.getDescription());
+        
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-		Department updatedDepartment =
-		        departmentRepository.save(existingDepartment);
+        
+        if (request.getName() != null && !request.getName().isBlank()) {
 
-		return toResponse(updatedDepartment);
-	}
+            
+            boolean nameChanged = !request.getName().equals(department.getName());
+            if (nameChanged && departmentRepository.existsByName(request.getName())) {
+                throw new DuplicateResourceException(
+                    "Department with name '" + request.getName() + "' already exists"
+                );
+            }
+            department.setName(request.getName());
+        }
 
-	@Override
-	public void deleteDepartment(Long id) {
-		Department existingDepartment = departmentRepository.findById(id)
-	            .orElseThrow(() ->
-	                    new RuntimeException("Department not found with id " + id));
+        
+        if (request.getDescription() != null) {
+            department.setDescription(request.getDescription());
+        }
 
-	    departmentRepository.delete(existingDepartment);
-	}
-	private Department toEntity(DepartmentRequest request) {
+       
+        Department updated = departmentRepository.save(department);
+        return DepartmentResponse.fromEntity(updated);
+    }
 
-	    Department department = new Department();
+   
+    @Override
+    @Transactional
+    public void deleteDepartment(Long id) {
+       
+        if (!departmentRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Department", "id", id);
+        }
+        
+        departmentRepository.deleteById(id);
+    }
 
-	    department.setName(request.getName());
-	    department.setDescription(request.getDescription());
-
-	    return department;
-	}
-	private DepartmentResponse toResponse(Department department) {
-
-	    DepartmentResponse response = new DepartmentResponse();
-
-	    response.setId(department.getId());
-	    response.setName(department.getName());
-	    response.setDescription(department.getDescription());
-
-	    return response;
-	}
+   
+    @Override
+    @Transactional(readOnly = true)
+    public Department getDepartmentEntityById(Long id) {
+        return departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
+    }
 }

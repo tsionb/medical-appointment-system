@@ -1,19 +1,23 @@
 package com.medical.department.service;
 
-import java.util.List;
+import com.medical.department.dto.request.CreateDepartmentRequest;
+import com.medical.department.dto.request.UpdateDepartmentRequest;
+import com.medical.department.dto.response.DepartmentResponse;
+import com.medical.department.entity.Department;
 
-import com.medical.department.dto.DepartmentRequest;
-import com.medical.department.dto.DepartmentResponse;
+import java.util.List;
 
 public interface DepartmentService {
 
-    DepartmentResponse saveDepartment(DepartmentRequest request);
+    DepartmentResponse createDepartment(CreateDepartmentRequest request);
 
     List<DepartmentResponse> getAllDepartments();
 
     DepartmentResponse getDepartmentById(Long id);
 
-    DepartmentResponse updateDepartment(Long id, DepartmentRequest request);
+    DepartmentResponse updateDepartment(Long id, UpdateDepartmentRequest request);
 
     void deleteDepartment(Long id);
+    
+    Department getDepartmentEntityById(Long id);
 }

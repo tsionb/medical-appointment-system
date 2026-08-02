@@ -1,14 +1,17 @@
 package com.medical.department.controller;
 
-import java.util.List;
-
+import com.medical.department.dto.request.CreateDepartmentScheduleRequest;
+import com.medical.department.dto.response.DepartmentScheduleResponse;
+import com.medical.department.service.DepartmentScheduleService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.medical.department.dto.*;
-import com.medical.department.service.DepartmentScheduleService;
+import java.util.List;
 
 @RestController
-@RequestMapping("/department-schedules")
+@RequestMapping("/api/departments/{departmentId}/schedules")
 public class DepartmentScheduleController {
 
 	private final DepartmentScheduleService scheduleService;
@@ -18,36 +21,38 @@ public class DepartmentScheduleController {
 	}
 	
 	@GetMapping
-	public List<DepartmentScheduleResponse> getAllDepartmentSchedules() {
-	    return scheduleService.getAllSchedules();
-	}
-	
-	@GetMapping("/{id}")
-	public DepartmentScheduleResponse getDepartmentSchedule(
-	        @PathVariable Long id) {
+	public ResponseEntity<List<DepartmentScheduleResponse>> getOperatingHours(
+            @PathVariable Long departmentId) {
 
-	    return scheduleService.getScheduleById(id);
-	}
+        return ResponseEntity.ok(scheduleService.getOperatingHours(departmentId));
+    }
+	
+	@GetMapping("/{scheduleId}")
+	public ResponseEntity<DepartmentScheduleResponse> getOperatingHoursById(
+            @PathVariable Long departmentId,
+            @PathVariable Long scheduleId) {
+
+        return ResponseEntity.ok(scheduleService.getOperatingHoursById(scheduleId));
+    }
 	
 	@PostMapping
-	public DepartmentScheduleResponse saveDepartmentSchedule(
-	        @RequestBody DepartmentScheduleRequest request) {
+	public ResponseEntity<DepartmentScheduleResponse> addOperatingHours(
+            @PathVariable Long departmentId,
+            @Valid @RequestBody CreateDepartmentScheduleRequest request) {
 
-	    return scheduleService.saveSchedule(request);
-	}
+        DepartmentScheduleResponse response =
+                scheduleService.addOperatingHours(departmentId, request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 	
-	@PutMapping("/{id}")
-	public DepartmentScheduleResponse updateDepartmentSchedule(
-	        @PathVariable Long id,
-	        @RequestBody DepartmentScheduleRequest request) {
-
-	    return scheduleService.updateSchedule(id, request);
-	}
 	
-	@DeleteMapping("/{id}")
-	public void deleteSchedule(@PathVariable Long id) {
+	
+	@DeleteMapping("/{scheduleId}")
+    public ResponseEntity<Void> deleteOperatingHours(
+            @PathVariable Long departmentId,
+            @PathVariable Long scheduleId) {
 
-	    scheduleService.deleteSchedule(id);
-
-	}
+        scheduleService.deleteOperatingHours(departmentId, scheduleId);
+        return ResponseEntity.noContent().build();
+    }
 }

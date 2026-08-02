@@ -1,114 +1,119 @@
 package com.medical.department.service;
+
+import com.medical.common.exception.custom.DuplicateResourceException;
+import com.medical.common.exception.custom.ResourceNotFoundException;
+import com.medical.department.dto.request.CreateDepartmentScheduleRequest;
+import com.medical.department.dto.response.DepartmentScheduleResponse;
+import com.medical.department.entity.Department;
+import com.medical.department.entity.DepartmentSchedule;
+import com.medical.department.repository.DepartmentRepository;
+import com.medical.department.repository.DepartmentScheduleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.medical.department.repository.*;
-import com.medical.department.entity.*;
-import com.medical.department.dto.*;
 
 @Service
-public class DepartmentScheduleServiceImpl implements DepartmentScheduleService{
+public class DepartmentScheduleServiceImpl implements DepartmentScheduleService {
 
-	private final DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
+    private final DepartmentScheduleRepository scheduleRepository;
 
-	private final DepartmentScheduleRepository departmentScheduleRepository;
-	
-	public DepartmentScheduleServiceImpl(DepartmentRepository departmentRepository, DepartmentScheduleRepository departmentScheduleRepository) {
-		this.departmentRepository=departmentRepository;
-		this.departmentScheduleRepository=departmentScheduleRepository;
-	}
-	
-	@Override
-	public DepartmentScheduleResponse saveSchedule(DepartmentScheduleRequest request) {
+    public DepartmentScheduleServiceImpl(
+            DepartmentRepository departmentRepository,
+            DepartmentScheduleRepository scheduleRepository) {
+        this.departmentRepository = departmentRepository;
+        this.scheduleRepository = scheduleRepository;
+    }
 
-	    Department department = departmentRepository.findById(request.getDepartmentId())
-	            .orElseThrow(() ->
-	                    new RuntimeException("Department not found"));
+   
+    @Override
+    @Transactional
+    public DepartmentScheduleResponse addOperatingHours(
+            Long departmentId,
+            CreateDepartmentScheduleRequest request) {
 
-	    DepartmentSchedule schedule = toEntity(request, department);
+        
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Department", "id", departmentId));
 
-	    DepartmentSchedule savedSchedule = departmentScheduleRepository.save(schedule);
+        
+        if (scheduleRepository.existsByDepartmentIdAndDayOfWeek(
+                departmentId, request.getDayOfWeek())) {
+            throw new DuplicateResourceException(
+                "Operating hours for " + request.getDayOfWeek() +
+                " are already defined for this department. " +
+                "Delete the existing entry first if you want to change the hours."
+            );
+        }
 
-	    return toResponse(savedSchedule);
-	}
+       
+        if (!request.getOpenTime().isBefore(request.getCloseTime())) {
+            throw new IllegalArgumentException(
+                "Open time (" + request.getOpenTime() + ") must be before " +
+                "close time (" + request.getCloseTime() + ")"
+            );
+        }
 
-	@Override
-	public List<DepartmentScheduleResponse> getAllSchedules() {
+        
+        DepartmentSchedule schedule = new DepartmentSchedule();
+        schedule.setDepartment(department);
+        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setOpenTime(request.getOpenTime());
+        schedule.setCloseTime(request.getCloseTime());
 
-	    return departmentScheduleRepository.findAll()
-	            .stream()
-	            .map(this::toResponse)
-	            .toList();
-	}
+        DepartmentSchedule saved = scheduleRepository.save(schedule);
+        return DepartmentScheduleResponse.fromEntity(saved);
+    }
 
-	@Override
-	public DepartmentScheduleResponse getScheduleById(Long id) {
+  
+    @Override
+    @Transactional(readOnly = true)
+    public List<DepartmentScheduleResponse> getOperatingHours(Long departmentId) {
+        
+        if (!departmentRepository.existsById(departmentId)) {
+            throw new ResourceNotFoundException("Department", "id", departmentId);
+        }
 
-	    DepartmentSchedule schedule = departmentScheduleRepository.findById(id)
-	            .orElseThrow(() ->
-	                    new RuntimeException("Schedule not found"));
+        return scheduleRepository.findByDepartmentId(departmentId)
+                .stream()
+                .map(DepartmentScheduleResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
 
-	    return toResponse(schedule);
-	}
+    
+    @Override
+    @Transactional(readOnly = true)
+    public DepartmentScheduleResponse getOperatingHoursById(Long scheduleId) {
+        DepartmentSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "DepartmentSchedule", "id", scheduleId));
+        return DepartmentScheduleResponse.fromEntity(schedule);
+    }
 
-	@Override
-	public DepartmentScheduleResponse updateSchedule(Long id,
-	                                                 DepartmentScheduleRequest request) {
+   
+    @Override
+    @Transactional
+    public void deleteOperatingHours(Long departmentId, Long scheduleId) {
 
-	    DepartmentSchedule existingSchedule =
-	            departmentScheduleRepository.findById(id)
-	            .orElseThrow(() ->
-	                    new RuntimeException("Schedule not found with id " + id));
+        
+        if (!departmentRepository.existsById(departmentId)) {
+            throw new ResourceNotFoundException("Department", "id", departmentId);
+        }
 
-	    Department department =
-	            departmentRepository.findById(request.getDepartmentId())
-	            .orElseThrow(() ->
-	                    new RuntimeException("Department not found with id " + request.getDepartmentId()));
+        DepartmentSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "DepartmentSchedule", "id", scheduleId));
 
-	    existingSchedule.setDepartment(department);
-	    existingSchedule.setDayOfWeek(request.getDayOfWeek());
-	    existingSchedule.setOpenTime(request.getOpenTime());
-	    existingSchedule.setCloseTime(request.getCloseTime());
+       
+        if (!schedule.getDepartment().getId().equals(departmentId)) {
+            throw new ResourceNotFoundException(
+                "DepartmentSchedule", "id", scheduleId);
+        }
 
-	    DepartmentSchedule updatedSchedule =
-	            departmentScheduleRepository.save(existingSchedule);
-
-	    return toResponse(updatedSchedule);
-	}
-
-	@Override
-	public void deleteSchedule(Long id) {
-		DepartmentSchedule schedule = departmentScheduleRepository.findById(id).orElseThrow(()->
-        new RuntimeException("Schedule not found with id " + id));
-		
-		departmentScheduleRepository.delete(schedule);
-		
-	}
-	private DepartmentSchedule toEntity(
-	        DepartmentScheduleRequest request,
-	        Department department) {
-		DepartmentSchedule schedule = new DepartmentSchedule();
-
-		schedule.setDepartment(department);
-		schedule.setDayOfWeek(request.getDayOfWeek());
-		schedule.setOpenTime(request.getOpenTime());
-		schedule.setCloseTime(request.getCloseTime());
-
-		return schedule;
-	}
-	private DepartmentScheduleResponse toResponse(DepartmentSchedule schedule) {
-
-	    DepartmentScheduleResponse response =
-	            new DepartmentScheduleResponse();
-
-	    response.setId(schedule.getId());
-	    response.setDepartmentId(schedule.getDepartment().getId());
-	    response.setDayOfWeek(schedule.getDayOfWeek());
-	    response.setOpenTime(schedule.getOpenTime());
-	    response.setCloseTime(schedule.getCloseTime());
-
-	    return response;
-	}
-	
+        scheduleRepository.deleteById(scheduleId);
+    }
 }

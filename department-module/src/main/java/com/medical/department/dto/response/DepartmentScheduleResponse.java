@@ -1,6 +1,8 @@
-package com.medical.department.dto;
+package com.medical.department.dto.response;
 
 import java.time.LocalTime;
+
+import com.medical.department.entity.DepartmentSchedule;
 
 public class DepartmentScheduleResponse {
 
@@ -10,6 +12,19 @@ public class DepartmentScheduleResponse {
     private LocalTime openTime;
     private LocalTime closeTime;
 
+    public DepartmentScheduleResponse() {}
+
+    
+    public static DepartmentScheduleResponse fromEntity(DepartmentSchedule schedule) {
+        DepartmentScheduleResponse response = new DepartmentScheduleResponse();
+        response.setId(schedule.getId());
+        response.setDayOfWeek(schedule.getDayOfWeek());
+        response.setOpenTime(schedule.getOpenTime());
+        response.setCloseTime(schedule.getCloseTime());
+        return response;
+    }
+    
+    
     public Long getId() {
         return id;
     }
