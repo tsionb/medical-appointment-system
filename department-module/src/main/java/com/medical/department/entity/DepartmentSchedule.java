@@ -2,6 +2,7 @@ package com.medical.department.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalTime;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 
 @Entity
@@ -15,6 +16,7 @@ public class DepartmentSchedule {
   
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
+    @JsonBackReference
     private Department department;
 
     
