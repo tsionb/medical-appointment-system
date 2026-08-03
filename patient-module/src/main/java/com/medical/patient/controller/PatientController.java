@@ -1,17 +1,19 @@
 package com.medical.patient.controller;
 
-import java.util.List;
-
+import com.medical.patient.dto.request.CreatePatientRequest;
+import com.medical.patient.dto.request.UpdatePatientRequest;
+import com.medical.patient.dto.response.PatientResponse;
+import com.medical.patient.service.PatientService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.medical.patient.dto.PatientRequest;
-import com.medical.patient.dto.PatientResponse;
-import com.medical.patient.service.PatientService;
+import java.util.List;
 
 
 @RestController
 @RequestMapping("/api/patients")
-@CrossOrigin("*")
 public class PatientController {
 
     private final PatientService patientService;
@@ -21,8 +23,10 @@ public class PatientController {
     }
 
     @PostMapping
-    public PatientResponse createPatient(@RequestBody PatientRequest request) {
-        return patientService.createPatient(request);
+    public ResponseEntity<PatientResponse> createPatient(
+            @Valid @RequestBody CreatePatientRequest request) {
+        return new ResponseEntity<>(
+                patientService.createPatient(request), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -36,8 +40,7 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    public PatientResponse updatePatient(@PathVariable Long id,
-                                 @RequestBody PatientRequest request) {
+    public PatientResponse updatePatient(@PathVariable Long id,  @Valid @RequestBody UpdatePatientRequest request) {
         return patientService.updatePatient(id, request);
     }
 

@@ -1,6 +1,8 @@
-package com.medical.patient.dto;
+package com.medical.patient.dto.response;
 
 import java.time.LocalDate;
+
+import com.medical.patient.entity.Patient;
 
 public class PatientResponse {
 
@@ -12,6 +14,21 @@ public class PatientResponse {
     private LocalDate dateOfBirth;
     private String gender;
     private String address;
+    
+    public PatientResponse() {}
+
+    public static PatientResponse fromEntity(Patient patient) {
+        PatientResponse response = new PatientResponse();
+        response.setId(patient.getId());
+        response.setFirstName(patient.getFirstName());
+        response.setLastName(patient.getLastName());
+        response.setEmail(patient.getEmail());
+        response.setPhone(patient.getPhone());
+        response.setDateOfBirth(patient.getDateOfBirth());
+        response.setGender(patient.getGender());
+        response.setAddress(patient.getAddress());
+        return response;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

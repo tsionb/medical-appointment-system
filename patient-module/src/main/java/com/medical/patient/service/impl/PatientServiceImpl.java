@@ -5,13 +5,17 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.medical.patient.dto.PatientRequest;
-import com.medical.patient.dto.PatientResponse;
+import com.medical.patient.dto.request.CreatePatientRequest;
+import com.medical.patient.dto.request.UpdatePatientRequest;
+import com.medical.patient.dto.response.PatientResponse;
 import com.medical.patient.entity.Patient;
 import com.medical.common.exception.custom.DuplicateResourceException;
 import com.medical.common.exception.custom.ResourceNotFoundException;
 import com.medical.patient.repository.PatientRepository;
 import com.medical.patient.service.PatientService;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
  
 
 @Service("PrimaryPatientService")
@@ -24,55 +28,84 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientResponse createPatient(PatientRequest request) {
+    @Transactional
+    public PatientResponse createPatient(CreatePatientRequest request) {
         if (patientRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException(
                     "A patient with email '" + request.getEmail() + "' already exists.");
         }
         
-        Patient patient = toEntity(request);
-        Patient saved = patientRepository.save(patient);
-        return toResponse(saved);
+        Patient patient = new Patient();
+        patient.setFirstName(request.getFirstName());
+        patient.setLastName(request.getLastName());
+        patient.setEmail(request.getEmail());
+        patient.setPhone(request.getPhone());
+        patient.setDateOfBirth(request.getDateOfBirth());
+        patient.setGender(request.getGender());
+        patient.setAddress(request.getAddress());
+
+        return PatientResponse.fromEntity(patientRepository.save(patient));
     }
 
     @Override
-    public PatientResponse updatePatient(Long id, PatientRequest request) {
+    @Transactional
+    public PatientResponse updatePatient(Long id, UpdatePatientRequest request) {
 
-        Patient existing = patientRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient", "id", id));
-
-        existing.setFirstName(request.getFirstName());
-        existing.setLastName(request.getLastName());
-        existing.setEmail(request.getEmail());
-        existing.setPhone(request.getPhone());
-        existing.setDateOfBirth(request.getDateOfBirth());
-        existing.setGender(request.getGender());
-        existing.setAddress(request.getAddress());
- 
-        Patient saved = patientRepository.save(existing);
-        return toResponse(saved);
-
-    }
-
-    @Override
-    public PatientResponse getPatientById(Long id) {
         Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
+
+        if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
+            patient.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null && !request.getLastName().isBlank()) {
+            patient.setLastName(request.getLastName());
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (patientRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+                throw new DuplicateResourceException(
+                    "Email '" + request.getEmail() + "' is already registered"
+                );
+            }
+            patient.setEmail(request.getEmail());
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            patient.setPhone(request.getPhone());
+        }
+        if (request.getDateOfBirth() != null) {
+            patient.setDateOfBirth(request.getDateOfBirth());   
+        }
+        if (request.getGender() != null && !request.getGender().isBlank()) {
+                patient.setGender(request.getGender());
+         } 
+        if (request.getAddress() != null) {
+            patient.setAddress(request.getAddress());
+        }
+
+        return PatientResponse.fromEntity(patientRepository.save(patient));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PatientResponse getPatientById(Long id) {
+    	return PatientResponse.fromEntity(
+        		patientRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient", "id", id));
-        return toResponse(patient);
+                        new ResourceNotFoundException("Patient", "id", id))
+        );
 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PatientResponse> getAllPatients() {
         return patientRepository.findAll()
         		.stream()
-        		.map(this::toResponse)
-        		.toList();
+        		.map(PatientResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public void deletePatient(Long id) {
 
         Patient patient = patientRepository.findById(id)
@@ -83,29 +116,11 @@ public class PatientServiceImpl implements PatientService {
     }
     
 
-    private Patient toEntity(PatientRequest request) {
-        Patient patient = new Patient();
-        patient.setFirstName(request.getFirstName());
-        patient.setLastName(request.getLastName());
-        patient.setEmail(request.getEmail());
-        patient.setPhone(request.getPhone());
-        patient.setDateOfBirth(request.getDateOfBirth());
-        patient.setGender(request.getGender());
-        patient.setAddress(request.getAddress());
-        return patient;
-    }
- 
-    private PatientResponse toResponse(Patient patient) {
-        PatientResponse response = new PatientResponse();
-        response.setId(patient.getId());
-        response.setFirstName(patient.getFirstName());
-        response.setLastName(patient.getLastName());
-        response.setEmail(patient.getEmail());
-        response.setPhone(patient.getPhone());
-        response.setDateOfBirth(patient.getDateOfBirth());
-        response.setGender(patient.getGender());
-        response.setAddress(patient.getAddress());
-        return response;
+    @Override
+    @Transactional(readOnly = true)
+    public Patient getPatientEntityById(Long id) {
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
     }
 
 }
