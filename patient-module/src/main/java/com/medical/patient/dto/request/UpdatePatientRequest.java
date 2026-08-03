@@ -1,58 +1,62 @@
-package com.medical.patient.entity;
+package com.medical.patient.dto.request;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "patients")
+public class UpdatePatientRequest {
 
-public class Patient {
-	
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(nullable = false, length = 50)
+    @Size(max = 50, message = "First name cannot exceed 50 characters")
     private String firstName;
-    
-    @Column(nullable = false, length = 50)
+
+    @Size(max = 50, message = "Last name cannot exceed 50 characters")
     private String lastName;
-    
-    @Column(nullable = false, unique = true, length = 100)
+
+    @Email(message = "Must be a valid email address")
+    @Size(max = 100, message = "Email cannot exceed 100 characters")
     private String email;
-    
-    @Column(nullable = false, length = 20)
+
+    @Size(max = 20, message = "Phone number cannot exceed 20 characters")
     private String phone;
-    
-    @Column(nullable = false)
+
+    @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
-    @Column(nullable = false, length = 10)
+
+ 
+    @Pattern(
+        regexp = "^(MALE|FEMALE)$",
+        message = "Gender must be one of: MALE, FEMALE"
+    )
     private String gender;
-    @Column(length = 255)
+
+    @Size(max = 255, message = "Address cannot exceed 255 characters")
     private String address;
-    
-    public Patient() {
-    	
-    }
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
+
+    public UpdatePatientRequest() {}
+
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
-    
+
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-    
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    
+
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
-    
+
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
     public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public void setGender(String gender) {
+        this.gender = gender != null ? gender.toUpperCase() : null;
+    }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 }
