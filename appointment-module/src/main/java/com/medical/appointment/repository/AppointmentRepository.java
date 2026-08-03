@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -25,10 +27,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     boolean existsByScheduleId(Long scheduleId);
 
     @Query("SELECT a FROM Appointment a " +
-           "WHERE a.reminderSent = false " +
-           "AND a.status = 'CONFIRMED' " +
-           "AND a.schedule.date = CURRENT_DATE + 1")
-    List<Appointment> findAppointmentsNeedingReminder();
+            "WHERE a.reminderSent = false " +
+            "AND a.status = com.medical.common.enums.AppointmentStatus.CONFIRMED " +
+            "AND a.schedule.date = :targetDate")
+     List<Appointment> findAppointmentsNeedingReminder(@Param("targetDate") LocalDate targetDate);
 
-    java.util.Optional<Appointment> findByScheduleId(Long scheduleId);
+     Optional<Appointment> findByScheduleId(Long scheduleId);
 }
