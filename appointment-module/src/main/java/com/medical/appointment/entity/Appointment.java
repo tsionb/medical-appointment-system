@@ -26,7 +26,7 @@ public class Appointment {
 
    
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "schedule_id", nullable = false, unique = true)
+    @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
     @Enumerated(EnumType.STRING)

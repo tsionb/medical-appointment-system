@@ -33,4 +33,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      List<Appointment> findAppointmentsNeedingReminder(@Param("targetDate") LocalDate targetDate);
 
      Optional<Appointment> findByScheduleId(Long scheduleId);
+     
+     boolean existsByScheduleIdAndStatusIn(Long scheduleId, List<AppointmentStatus> statuses);
 }
