@@ -1,19 +1,23 @@
-package com.medical.records.dto;
+package com.medical.records.dto.response;
 
-public class MedicationResponseDto {
+import com.medical.records.entity.Medication;
+
+public class MedicationResponse {
 
     private Long id;
     private String name;
     private String description;
     private String category;
 
-    public MedicationResponseDto() {}
+    public MedicationResponse() {}
 
-    public MedicationResponseDto(Long id, String name, String description, String category) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.category = category;
+    public static MedicationResponse fromEntity(Medication medication) {
+        MedicationResponse response = new MedicationResponse();
+        response.setId(medication.getId());
+        response.setName(medication.getName());
+        response.setDescription(medication.getDescription());
+        response.setCategory(medication.getCategory());
+        return response;
     }
 
     public Long getId() { return id; }

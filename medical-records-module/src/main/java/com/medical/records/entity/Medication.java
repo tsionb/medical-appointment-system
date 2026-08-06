@@ -16,7 +16,6 @@ public class Medication {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
     
     @Column(length = 50)
     private String category;

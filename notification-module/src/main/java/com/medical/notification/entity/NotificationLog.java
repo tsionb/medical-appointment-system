@@ -36,6 +36,9 @@ public class NotificationLog {
 
     @Column(nullable = false)
     private boolean success;
+    
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage;
 
     public NotificationLog() {}
 
@@ -64,4 +67,9 @@ public class NotificationLog {
 
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
+    
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
 }

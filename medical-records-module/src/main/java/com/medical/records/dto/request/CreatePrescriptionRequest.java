@@ -1,25 +1,32 @@
-package com.medical.records.dto;
+package com.medical.records.dto.request;
 
-public class PrescriptionResponseDto {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-    private Long id;
+public class CreatePrescriptionRequest {
+
+    @NotNull(message = "Medication ID is required")
     private Long medicationId;
-    private String medicationName;
+
+    @NotBlank(message = "Dosage is required")
+    @Size(max = 100, message = "Dosage cannot exceed 100 characters")
     private String dosage;
+
+    @NotBlank(message = "Frequency is required")
+    @Size(max = 100, message = "Frequency cannot exceed 100 characters")
     private String frequency;
+
+    @Size(max = 100, message = "Duration cannot exceed 100 characters")
     private String duration;
+    
+    @Size(max = 1000, message = "Instructions cannot exceed 1000 characters")
     private String instructions;
 
-    public PrescriptionResponseDto() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public CreatePrescriptionRequest() {}
 
     public Long getMedicationId() { return medicationId; }
     public void setMedicationId(Long medicationId) { this.medicationId = medicationId; }
-
-    public String getMedicationName() { return medicationName; }
-    public void setMedicationName(String medicationName) { this.medicationName = medicationName; }
 
     public String getDosage() { return dosage; }
     public void setDosage(String dosage) { this.dosage = dosage; }

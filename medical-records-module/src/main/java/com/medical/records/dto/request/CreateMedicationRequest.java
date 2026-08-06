@@ -1,20 +1,21 @@
-package com.medical.records.dto;
+package com.medical.records.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class MedicationRequestDto {
+public class CreateMedicationRequest {
 
     @NotBlank(message = "Medication name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")
     private String name;
 
+    @Size(max = 2000, message = "Description cannot exceed 2000 characters")
     private String description;
 
     @Size(max = 50, message = "Category must not exceed 50 characters")
     private String category;
 
-    public MedicationRequestDto() {}
+    public CreateMedicationRequest() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
