@@ -1,26 +1,24 @@
-package com.medical.records.entity;
+package com.medical.records.dto.response;
 
-import jakarta.persistence.*;
+import com.medical.records.entity.Medication;
 
+public class MedicationResponse {
 
-@Entity
-@Table(name = "medications")
-public class Medication {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true, length = 100)
     private String name;
-
-    @Column(columnDefinition = "TEXT")
     private String description;
-    
-    @Column(length = 50)
     private String category;
 
-    public Medication() {}
+    public MedicationResponse() {}
+
+    public static MedicationResponse fromEntity(Medication medication) {
+        MedicationResponse response = new MedicationResponse();
+        response.setId(medication.getId());
+        response.setName(medication.getName());
+        response.setDescription(medication.getDescription());
+        response.setCategory(medication.getCategory());
+        return response;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
