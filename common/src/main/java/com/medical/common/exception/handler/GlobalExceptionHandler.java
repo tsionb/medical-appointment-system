@@ -1,16 +1,7 @@
 package com.medical.common.exception.handler;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import com.medical.common.dto.response.ErrorResponse;
+import com.medical.common.dto.response.ValidationErrorResponse;
 import com.medical.common.exception.custom.AlreadyOnWaitlistException;
 import com.medical.common.exception.custom.AppointmentNotCompletedException;
 import com.medical.common.exception.custom.DuplicateResourceException;
@@ -19,95 +10,136 @@ import com.medical.common.exception.custom.OutsideOperatingHoursException;
 import com.medical.common.exception.custom.ResourceNotFoundException;
 import com.medical.common.exception.custom.SlotNotAvailableException;
 import com.medical.common.exception.custom.UnauthorizedAccessException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Builds a standard error response map
-    private Map<String, Object> buildErrorResponse(HttpStatus status, String message, Object details) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now().toString());
-        errorResponse.put("status", status.value());
-        errorResponse.put("error", status.getReasonPhrase());
-        errorResponse.put("message", message);
-        if (details != null) {
-            errorResponse.put("details", details);
-        }
-        return errorResponse;
-    }
-
-    // 1. Handle 404 - Resource Not Found
+    // 404 Not Found 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
-        Map<String, Object> details = new HashMap<>();
-        details.put("resourceName", ex.getResourceName());
-        details.put("fieldName", ex.getFieldName());
-        details.put("fieldValue", ex.getFieldValue());
-        
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), details), 
-            HttpStatus.NOT_FOUND
-        );
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
     }
 
-    // 2. Handle 409 - Conflict (Duplicates, Slot Taken, Already on Waitlist)
-    @ExceptionHandler({
-        DuplicateResourceException.class, 
-        SlotNotAvailableException.class, 
-        AlreadyOnWaitlistException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleConflictExceptions(RuntimeException ex) {
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null), 
-            HttpStatus.CONFLICT
-        );
+    //409 Conflict 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResource(
+            DuplicateResourceException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
 
-    // 3. Handle 400 - Bad Request (Operating Hours, Invalid Status, Not Completed)
-    @ExceptionHandler({
-        OutsideOperatingHoursException.class,
-        InvalidAppointmentStatusException.class,
-        AppointmentNotCompletedException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleBadRequestExceptions(RuntimeException ex) {
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null), 
-            HttpStatus.BAD_REQUEST
-        );
+    // 409 Conflict
+    @ExceptionHandler(SlotNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleSlotNotAvailable(
+            SlotNotAvailableException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Slot Not Available",
+                ex.getMessage(), request);
     }
 
-    // 4. Handle 403 - Forbidden (Unauthorized Access)
+    //400 Bad Request 
+    @ExceptionHandler(OutsideOperatingHoursException.class)
+    public ResponseEntity<ErrorResponse> handleOutsideOperatingHours(
+            OutsideOperatingHoursException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Outside Operating Hours",
+                ex.getMessage(), request);
+    }
+
+    // 400 Bad Request 
+    @ExceptionHandler(AppointmentNotCompletedException.class)
+    public ResponseEntity<ErrorResponse> handleAppointmentNotCompleted(
+            AppointmentNotCompletedException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Appointment Not Completed",
+                ex.getMessage(), request);
+    }
+
+    // 409 Conflict 
+    @ExceptionHandler(AlreadyOnWaitlistException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyOnWaitlist(
+            AlreadyOnWaitlistException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Already On Waitlist",
+                ex.getMessage(), request);
+    }
+
+    //400 Bad Request
+    @ExceptionHandler(InvalidAppointmentStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatus(
+            InvalidAppointmentStatusException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid Appointment Status",
+                ex.getMessage(), request);
+    }
+
+    //403 Forbidden
     @ExceptionHandler(UnauthorizedAccessException.class)
-    public ResponseEntity<Map<String, Object>> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), null), 
-            HttpStatus.FORBIDDEN
-        );
+    public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(
+            UnauthorizedAccessException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "Forbidden",
+                ex.getMessage(), request);
     }
 
-    // 5. Handle 400 - Validation Failures (Spring's @Valid annotation)
+    //401 Unauthorized
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException ex, HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, "Unauthorized",
+                ex.getMessage(), request);
+    }
+
+    //400 Bad Request — Validation Errors 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            fieldErrors.put(fieldName, errorMessage);
-        });
-        
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors), 
-            HttpStatus.BAD_REQUEST
+    public ResponseEntity<ValidationErrorResponse> handleValidationErrors(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        Map<String, String> validationErrors = new HashMap<>();
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            validationErrors.put(fieldError.getField(),
+                    fieldError.getDefaultMessage());
+        }
+
+        ValidationErrorResponse error = new ValidationErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Failed",
+                "One or more fields have invalid values",
+                request.getRequestURI(),
+                validationErrors
         );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // 6. Catch-all 500 - Internal Server Error (For any unhandled exceptions)
+    // 400 Bad Request
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Bad Request",
+                ex.getMessage(), request);
+    }
+
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
-        // In production, log the stack trace here: log.error("Unhandled exception", ex);
-        return new ResponseEntity<>(
-            buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.", null), 
-            HttpStatus.INTERNAL_SERVER_ERROR
-        );
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception ex, HttpServletRequest request) {
+        ex.printStackTrace(); 
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
+                "An unexpected error occurred. Please try again later.", request);
+    }
+
+
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String error,
+                                                  String message,
+                                                  HttpServletRequest request) {
+        ErrorResponse response = new ErrorResponse(
+                status.value(), error, message, request.getRequestURI());
+        return new ResponseEntity<>(response, status);
     }
 }

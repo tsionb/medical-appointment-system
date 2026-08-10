@@ -5,10 +5,18 @@ import com.medical.appointment.dto.request.UpdateAppointmentStatusRequest;
 import com.medical.appointment.dto.response.AppointmentResponse;
 import com.medical.appointment.service.AppointmentService;
 import com.medical.common.enums.AppointmentStatus;
+import com.medical.common.exception.custom.ResourceNotFoundException;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.medical.patient.entity.Patient;
+import com.medical.patient.repository.PatientRepository;
 
 import java.util.List;
 
@@ -17,13 +25,19 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final PatientRepository patientRepository;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(
+            AppointmentService appointmentService,
+            PatientRepository patientRepository) {
+
         this.appointmentService = appointmentService;
+        this.patientRepository = patientRepository;
     }
 
 
     @PostMapping
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<AppointmentResponse> bookAppointment(
             @Valid @RequestBody CreateAppointmentRequest request) {
         return new ResponseEntity<>(
@@ -75,10 +89,17 @@ public class AppointmentController {
 
 
     @DeleteMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<AppointmentResponse> cancelAppointment(
             @PathVariable Long id,
-            @RequestParam Long patientId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+
+        Patient patient = patientRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Patient", "email", userDetails.getUsername()));
+
         return ResponseEntity.ok(
-                appointmentService.cancelAppointment(id, patientId));
+                appointmentService.cancelAppointment(id, patient.getId()));
     }
 }
