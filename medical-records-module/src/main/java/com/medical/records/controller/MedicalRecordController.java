@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class MedicalRecordController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<MedicalRecordResponse> createRecord(@Valid @RequestBody CreateMedicalRecordRequest createDto) {
         MedicalRecordResponse response = medicalRecordService.createMedicalRecord(createDto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -56,6 +58,7 @@ public class MedicalRecordController {
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<MedicalRecordResponse> updateMedicalRecord(
             @PathVariable Long id,
             @Valid @RequestBody UpdateMedicalRecordRequest request) {
