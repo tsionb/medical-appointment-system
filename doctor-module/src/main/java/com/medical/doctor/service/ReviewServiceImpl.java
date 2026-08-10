@@ -93,6 +93,15 @@ public class ReviewServiceImpl implements ReviewService {
                     "Review", "id", reviewId));
         return ReviewResponse.fromEntity(review);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReviewResponse> getReviewsByAppointment(Long appointmentId) {
+        return reviewRepository.findByAppointmentId(appointmentId)
+                .stream()
+                .map(ReviewResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
 
     
     @Override

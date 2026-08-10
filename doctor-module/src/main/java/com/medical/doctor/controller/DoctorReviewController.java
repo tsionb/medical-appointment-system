@@ -12,11 +12,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors/{doctorId}/reviews")
-public class ReviewController {
+public class DoctorReviewController {
 
     private final ReviewService reviewService;
 
-    public ReviewController(ReviewService reviewService) {
+    public DoctorReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
     }
 

@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -26,8 +27,10 @@ public class ReminderScheduler {
     @Transactional
     public void sendDailyReminders() {
 
+    	LocalDate tomorrow = LocalDate.now().plusDays(1);
+
         List<Appointment> appointmentsNeedingReminder =
-                appointmentRepository.findAppointmentsNeedingReminder();
+                appointmentRepository.findAppointmentsNeedingReminder(tomorrow);
 
         for (Appointment appointment : appointmentsNeedingReminder) {
             try {
@@ -36,7 +39,6 @@ public class ReminderScheduler {
                 appointmentRepository.save(appointment);
 
             } catch (Exception e) {
-              
                 System.err.println(
                     "Failed to send reminder for appointment ID " +
                     appointment.getId() + ": " + e.getMessage()
