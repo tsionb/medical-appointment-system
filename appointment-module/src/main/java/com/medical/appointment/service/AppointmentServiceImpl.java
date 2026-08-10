@@ -24,6 +24,12 @@ import com.medical.patient.entity.Patient;
 import com.medical.patient.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import com.medical.common.event.AppointmentBookedEvent;
+import com.medical.common.event.AppointmentCancelledEvent;
+import com.medical.common.event.AppointmentCompletedEvent;
+import com.medical.common.event.WaitlistPromotedEvent;
+
 
 import java.time.DayOfWeek;
 import java.util.List;
@@ -38,6 +44,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final DoctorRepository doctorRepository;
     private final ScheduleRepository scheduleRepository;
     private final DepartmentScheduleRepository departmentScheduleRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AppointmentServiceImpl(
             AppointmentRepository appointmentRepository,
@@ -45,13 +52,15 @@ public class AppointmentServiceImpl implements AppointmentService {
             PatientRepository patientRepository,
             DoctorRepository doctorRepository,
             ScheduleRepository scheduleRepository,
-            DepartmentScheduleRepository departmentScheduleRepository) {
+            DepartmentScheduleRepository departmentScheduleRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.appointmentRepository = appointmentRepository;
         this.waitlistRepository = waitlistRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.scheduleRepository = scheduleRepository;
         this.departmentScheduleRepository = departmentScheduleRepository;
+        this.eventPublisher = eventPublisher;
     }
 
 
@@ -139,6 +148,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setNotes(request.getNotes());
 
         Appointment saved = appointmentRepository.save(appointment);
+        eventPublisher.publishEvent(new AppointmentBookedEvent(this, saved.getId()));
         return AppointmentResponse.fromEntity(saved);
     }
 
@@ -233,9 +243,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (requested == AppointmentStatus.CANCELLED) {
             freeSlotAndPromoteWaitlist(appointment);
         }
-
+        
+        
         appointment.setStatus(requested);
-        return AppointmentResponse.fromEntity(appointmentRepository.save(appointment));
+        Appointment updated = appointmentRepository.save(appointment);
+        
+        if (requested == AppointmentStatus.CANCELLED) {
+            eventPublisher.publishEvent(
+                new AppointmentCancelledEvent(this, updated.getId()));
+        } else if (requested == AppointmentStatus.COMPLETED) {
+            eventPublisher.publishEvent(
+                new AppointmentCompletedEvent(this, updated.getId()));
+        }
+
+        return AppointmentResponse.fromEntity(updated);
     }
 
     @Override
@@ -267,7 +288,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         freeSlotAndPromoteWaitlist(appointment);
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
-        return AppointmentResponse.fromEntity(appointmentRepository.save(appointment));
+        Appointment cancelled = appointmentRepository.save(appointment);
+
+        eventPublisher.publishEvent(new AppointmentCancelledEvent(this, cancelled.getId()));
+        	return AppointmentResponse.fromEntity(cancelled);
     }
 
     @Override
@@ -286,20 +310,21 @@ public class AppointmentServiceImpl implements AppointmentService {
         schedule.setBooked(false);
         scheduleRepository.save(schedule);
 
+
         List<Waitlist> waitingQueue = waitlistRepository
                 .findByDoctorIdAndRequestedDateAndStatusOrderByCreatedAtAsc(
-                    appointment.getDoctor().getId(),
-                    schedule.getDate(),
-                    WaitlistStatus.WAITING
+                        appointment.getDoctor().getId(),
+                        schedule.getDate(),
+                        WaitlistStatus.WAITING
                 );
 
-        if (!waitingQueue.isEmpty()) {
-            Waitlist nextInQueue = waitingQueue.get(0); // first in, first out
 
+        if (!waitingQueue.isEmpty()) {
+
+            Waitlist nextInQueue = waitingQueue.get(0); 
 
             schedule.setBooked(true);
             scheduleRepository.save(schedule);
-
 
             Appointment promotedAppointment = new Appointment();
             promotedAppointment.setPatient(nextInQueue.getPatient());
@@ -307,13 +332,17 @@ public class AppointmentServiceImpl implements AppointmentService {
             promotedAppointment.setSchedule(schedule);
             promotedAppointment.setStatus(AppointmentStatus.CONFIRMED);
             promotedAppointment.setNotes(
-                "Automatically promoted from waitlist"
+                    "Automatically promoted from waitlist. " +
+                    "Original appointment was cancelled."
             );
-            appointmentRepository.save(promotedAppointment);
+
+            Appointment promoted = appointmentRepository.save(promotedAppointment);
 
             nextInQueue.setStatus(WaitlistStatus.PROMOTED);
             waitlistRepository.save(nextInQueue);
 
+            eventPublisher.publishEvent(new WaitlistPromotedEvent(this, promoted.getId()));
         }
+
     }
 }

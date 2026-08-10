@@ -15,6 +15,8 @@ public interface ReviewService {
     List<ReviewResponse> getReviewsByPatient(Long patientId);
 
     ReviewResponse getReviewById(Long reviewId);
+    
+    List<ReviewResponse> getReviewsByAppointment(Long appointmentId);
 
     void deleteReview(Long reviewId, Long patientId);
 }
