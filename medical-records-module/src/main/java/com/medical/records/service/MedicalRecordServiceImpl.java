@@ -6,7 +6,6 @@ import com.medical.common.enums.AppointmentStatus;
 import com.medical.common.exception.custom.AppointmentNotCompletedException;
 import com.medical.common.exception.custom.DuplicateResourceException;
 import com.medical.common.exception.custom.ResourceNotFoundException;
-import com.medical.records.dto.*;
 import com.medical.records.dto.request.CreateMedicalRecordRequest;
 import com.medical.records.dto.request.UpdateMedicalRecordRequest;
 import com.medical.records.dto.response.MedicalRecordResponse;

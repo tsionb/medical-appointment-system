@@ -27,15 +27,27 @@
             <artifactId>doctor-module</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <!--
-            security-module needs department-module because
-            AuthServiceImpl creates doctors and assigns them to departments.
-        -->
+       
         <dependency>
             <groupId>com.medical</groupId>
             <artifactId>department-module</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+    <groupId>com.medical</groupId>
+    <artifactId>appointment-module</artifactId>
+    <version>1.0.0</version>
+</dependency>
+<dependency>
+    <groupId>com.medical</groupId>
+    <artifactId>medical-records-module</artifactId>
+    <version>1.0.0</version>
+</dependency>
+<dependency>
+    <groupId>com.medical</groupId>
+    <artifactId>notification-module</artifactId>
+    <version>1.0.0</version>
+</dependency>
     </dependencies>
     <build>
         <plugins>
