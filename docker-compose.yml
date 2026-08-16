@@ -1,4 +1,6 @@
 services:
+
+  # ── PostgreSQL Database ──────────────────────────────────────────────────────
   postgres:
     image: postgres:15
     container_name: medical_postgres
@@ -10,6 +12,41 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - medical_network
+    restart: unless-stopped
+    healthcheck:
+ 
+      test: ["CMD-SHELL", "pg_isready -U medical_user -d medical_db"]
+      interval: 10s      # check every 10 seconds
+      timeout: 5s        # fail if no response in 5 seconds
+      retries: 5         # retry 5 times before marking as unhealthy
+      start_period: 10s  # wait 10 seconds before first check 
+
+  app:
+
+    build:
+      context: .
+      dockerfile: security-module/Dockerfile
+    container_name: medical_app
+    ports:
+      - "8080:8080"
+    environment:
+   
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medical_db
+      SPRING_DATASOURCE_USERNAME: medical_user
+      SPRING_DATASOURCE_PASSWORD: medical_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_MAIL_HOST: smtp.mailtrap.io
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: e2bce82a0a0fdf
+      SPRING_MAIL_PASSWORD: 9a627ed20d5985
+      APP_JWT_SECRET: ThisIsAVeryLongSecretKeyThatMustBeAtLeast256BitsLong1234567890
+      APP_JWT_EXPIRATION_MS: 86400000
+    depends_on:
+      postgres:
+
+        condition: service_healthy
     networks:
       - medical_network
     restart: unless-stopped

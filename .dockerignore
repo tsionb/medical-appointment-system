@@ -1,0 +1,28 @@
+# Compiled output — Docker builds from source
+**/target/
+
+# IDE files
+.idea/
+*.iml
+.eclipse/
+.settings/
+.project
+.classpath
+
+# Git
+.git/
+.gitignore
+
+# Environment variables — never copy into Docker image
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# README
+README.md
