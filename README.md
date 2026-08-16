@@ -69,11 +69,6 @@ cd medical-appointment-system
 ```
 
 ### 2. Create .env file
-```bash
-# Create .env in project root
-MAILTRAP_USERNAME=your_mailtrap_username
-MAILTRAP_PASSWORD=your_mailtrap_password
-```
 
 ### 3. Start everything
 ```bash
